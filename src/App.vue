@@ -1,5 +1,5 @@
 <script setup></script>
 
 <template>
-    <h1>Cryptonomicon</h1>
+    <h1 class="text-sm">Cryptonomicon</h1>
 </template>
