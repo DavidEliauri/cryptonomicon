@@ -1,4 +1,30 @@
 <template>
+    <div
+        v-if="loading"
+        class="w-100 h-100 fixed inset-0 z-50 flex items-center justify-center bg-purple-800 opacity-80"
+    >
+        <svg
+            class="-ml-1 mr-3 h-12 w-12 animate-spin text-white"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+        >
+            <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+            ></circle>
+            <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+        </svg>
+    </div>
+
     <div class="container mx-auto p-4">
         <section class="mt-8">
             <form @submit.prevent="requestTicker">
@@ -20,6 +46,26 @@
                                 class="block w-full rounded-md border-gray-300 pr-10 text-gray-900 focus:border-gray-500 focus:outline-none focus:ring-gray-500 sm:text-sm"
                                 placeholder="Например DOGE"
                             />
+                        </div>
+
+                        <div
+                            v-if="suggestions.length"
+                            class="flex flex-wrap rounded-md bg-white p-1 shadow-md"
+                        >
+                            <span
+                                v-for="suggestion in shortSuggestions"
+                                :key="suggestion.Symbol"
+                                @click="
+                                    () => {
+                                        request = suggestion.Symbol;
+                                        requestTicker();
+                                    }
+                                "
+                                tabindex="0"
+                                class="m-1 inline-flex cursor-pointer items-center rounded-md bg-gray-300 px-2 text-xs font-medium text-gray-800"
+                            >
+                                {{ suggestion.Symbol }}
+                            </span>
                         </div>
 
                         <div
@@ -164,14 +210,35 @@
     export default {
         data() {
             return {
+                loading: false,
                 error: '',
                 request: '',
                 tickers: [],
                 selectedTicker: null,
+                allTickers: [],
             };
         },
 
+        mounted() {
+            this.getTickers();
+        },
+
         methods: {
+            async getTickers() {
+                this.loading = true;
+
+                await axios
+                    .get('https://min-api.cryptocompare.com/data/all/coinlist?summary=true')
+                    .then((response) => {
+                        this.allTickers = Object.keys(response.data.Data).map(
+                            (key) => response.data.Data[key]
+                        );
+                    })
+                    .finally(() => {
+                        this.loading = false;
+                    });
+            },
+
             deleteTicker(tickerToRemove) {
                 this.tickers = this.tickers.filter((t) => t !== tickerToRemove);
 
@@ -210,7 +277,7 @@
                     })
                     .then((response) => {
                         if (response.data?.Response === 'Error') {
-                            this.error = 'Не найден курс';
+                            this.error = 'Не найден тикет';
                             return;
                         }
 
@@ -257,12 +324,33 @@
 
         computed: {
             normalizeGraph() {
+                if (!this.selectedTicker) {
+                    return [];
+                }
+
                 const maxValue = Math.max(...this.selectedTicker.price);
                 const minValue = Math.min(...this.selectedTicker.price);
 
                 return this.selectedTicker.price.map(
                     (price) => 5 + (((price - minValue) * 95) / (maxValue - minValue) || 0)
                 );
+            },
+
+            suggestions() {
+                if (!this.request) {
+                    return [];
+                }
+
+                return this.allTickers.filter((el) => {
+                    return (
+                        el.FullName.toUpperCase().indexOf(this.request.toUpperCase()) === 0 ||
+                        el.Symbol.toUpperCase().indexOf(this.request.toUpperCase()) === 0
+                    );
+                });
+            },
+
+            shortSuggestions() {
+                return this.suggestions.slice(0, 4);
             },
         },
     };
