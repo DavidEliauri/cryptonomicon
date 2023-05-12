@@ -1,9 +1,7 @@
-<script setup></script>
-
 <template>
-    <div class="container mx-auto flex flex-col items-center bg-gray-100 p-4">
-        <div class="container">
-            <section>
+    <div class="container mx-auto p-4">
+        <section class="mt-8">
+            <form @submit.prevent="requestTicker">
                 <div class="flex">
                     <div class="max-w-xs">
                         <label
@@ -11,8 +9,11 @@
                             class="block text-sm font-medium text-gray-700"
                             >Тикер</label
                         >
+
                         <div class="relative mt-1 rounded-md shadow-md">
                             <input
+                                v-model="request"
+                                @input="clearErrors"
                                 type="text"
                                 name="wallet"
                                 id="wallet"
@@ -20,10 +21,18 @@
                                 placeholder="Например DOGE"
                             />
                         </div>
+
+                        <div
+                            v-if="error"
+                            class="mt-2 text-sm text-red-600"
+                        >
+                            {{ error }}
+                        </div>
                     </div>
                 </div>
+
                 <button
-                    type="button"
+                    type="submit"
                     class="my-4 inline-flex items-center rounded-full border border-transparent bg-gray-600 px-4 py-2 text-sm font-medium leading-4 text-white shadow-sm transition-colors duration-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                 >
                     <!-- Heroicon name: solid/mail -->
@@ -41,130 +50,84 @@
                     </svg>
                     Добавить
                 </button>
+            </form>
+        </section>
+
+        <template v-if="tickers.length">
+            <hr class="my-4 w-full border-t border-gray-300" />
+
+            <section>
+                <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
+                    <div
+                        v-for="ticker in tickers"
+                        :key="ticker.name"
+                        @click="
+                            () => {
+                                if (selectedTicker === ticker) {
+                                    selectedTicker = null;
+                                    return;
+                                }
+
+                                selectedTicker = ticker;
+                            }
+                        "
+                        :class="{ '!outline outline-purple-800': ticker === selectedTicker }"
+                        class="cursor-pointer overflow-hidden rounded-lg bg-white shadow outline-none transition hover:shadow-lg focus:shadow-lg"
+                        tabindex="0"
+                    >
+                        <div class="px-4 py-5 text-center sm:p-6">
+                            <dt class="truncate text-sm font-medium text-gray-500">
+                                {{ ticker.name }} - RUB
+                            </dt>
+                            <dd class="mt-1 text-3xl font-semibold text-gray-900">
+                                {{ ticker.price[ticker.price.length - 1] }}
+                            </dd>
+                        </div>
+
+                        <button
+                            @click.stop="deleteTicker(ticker)"
+                            class="text-md relative z-10 flex w-full items-center justify-center border-t border-gray-200 bg-gray-100 px-4 py-4 font-medium text-gray-500 outline-none transition-all hover:bg-gray-200 hover:text-gray-600 focus:bg-gray-200 focus:text-gray-600 active:opacity-75 sm:px-6"
+                        >
+                            <svg
+                                class="h-5 w-5"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 20 20"
+                                fill="#718096"
+                                aria-hidden="true"
+                            >
+                                <path
+                                    fill-rule="evenodd"
+                                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                                    clip-rule="evenodd"
+                                ></path>
+                            </svg>
+
+                            Удалить
+                        </button>
+                    </div>
+                </dl>
             </section>
+        </template>
 
-            <hr class="my-4 w-full border-t border-gray-600" />
+        <template v-if="selectedTicker">
+            <hr class="my-4 w-full border-t border-gray-300" />
 
-            <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
-                <div
-                    class="cursor-pointer overflow-hidden rounded-lg border-solid border-purple-800 bg-white shadow"
-                >
-                    <div class="px-4 py-5 text-center sm:p-6">
-                        <dt class="truncate text-sm font-medium text-gray-500">WTF - USD</dt>
-                        <dd class="mt-1 text-3xl font-semibold text-gray-900">1.11</dd>
-                    </div>
-                    <div class="w-full border-t border-gray-200"></div>
-                    <button
-                        class="text-md flex w-full items-center justify-center bg-gray-100 px-4 py-4 font-medium text-gray-500 transition-all hover:bg-gray-200 hover:text-gray-600 hover:opacity-20 focus:outline-none sm:px-6"
-                    >
-                        <svg
-                            class="h-5 w-5"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="#718096"
-                            aria-hidden="true"
-                        >
-                            <path
-                                fill-rule="evenodd"
-                                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                                clip-rule="evenodd"
-                            ></path>
-                        </svg>
-                        Удалить
-                    </button>
-                </div>
-                <div
-                    class="cursor-pointer overflow-hidden rounded-lg border-4 border-solid border-purple-800 bg-white shadow"
-                >
-                    <div class="px-4 py-5 text-center sm:p-6">
-                        <dt class="truncate text-sm font-medium text-gray-500">VUE - RUB</dt>
-                        <dd class="mt-1 text-3xl font-semibold text-gray-900">80000.00</dd>
-                    </div>
-                    <div class="w-full border-t border-gray-200"></div>
-                    <button
-                        class="text-md flex w-full items-center justify-center bg-gray-100 px-4 py-4 font-medium text-gray-500 transition-all hover:bg-gray-200 hover:text-gray-600 hover:opacity-20 focus:outline-none sm:px-6"
-                    >
-                        <svg
-                            class="h-5 w-5"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="#718096"
-                            aria-hidden="true"
-                        >
-                            <path
-                                fill-rule="evenodd"
-                                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                                clip-rule="evenodd"
-                            ></path>
-                        </svg>
-                        Удалить
-                    </button>
-                </div>
-                <div
-                    class="cursor-pointer overflow-hidden rounded-lg border-solid border-purple-800 bg-white shadow"
-                >
-                    <div class="px-4 py-5 text-center sm:p-6">
-                        <dt class="truncate text-sm font-medium text-gray-500">BTC - USD</dt>
-                        <dd class="mt-1 text-3xl font-semibold text-gray-900">99999.99</dd>
-                    </div>
-                    <div class="w-full border-t border-gray-200"></div>
-                    <button
-                        class="text-md flex w-full items-center justify-center bg-gray-100 px-4 py-4 font-medium text-gray-500 transition-all hover:bg-gray-200 hover:text-gray-600 hover:opacity-20 focus:outline-none sm:px-6"
-                    >
-                        <svg
-                            class="h-5 w-5"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="#718096"
-                            aria-hidden="true"
-                        >
-                            <path
-                                fill-rule="evenodd"
-                                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                                clip-rule="evenodd"
-                            ></path>
-                        </svg>
-                        Удалить
-                    </button>
-                </div>
-                <div
-                    class="cursor-pointer overflow-hidden rounded-lg border-solid border-purple-800 bg-white shadow"
-                >
-                    <div class="px-4 py-5 text-center sm:p-6">
-                        <dt class="truncate text-sm font-medium text-gray-500">DOGE - USD</dt>
-                        <dd class="mt-1 text-3xl font-semibold text-gray-900">0.0014</dd>
-                    </div>
-                    <div class="w-full border-t border-gray-200"></div>
-                    <button
-                        class="text-md flex w-full items-center justify-center bg-gray-100 px-4 py-4 font-medium text-gray-500 transition-all hover:bg-gray-200 hover:text-gray-600 hover:opacity-20 focus:outline-none sm:px-6"
-                    >
-                        <svg
-                            class="h-5 w-5"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="#718096"
-                            aria-hidden="true"
-                        >
-                            <path
-                                fill-rule="evenodd"
-                                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                                clip-rule="evenodd"
-                            ></path>
-                        </svg>
-                        Удалить
-                    </button>
-                </div>
-            </dl>
-            <hr class="my-4 w-full border-t border-gray-600" />
             <section class="relative">
-                <h3 class="my-8 text-lg font-medium leading-6 text-gray-900">VUE - USD</h3>
-                <div class="flex h-64 items-end border-b border-l border-gray-600">
-                    <div class="h-24 w-10 border bg-purple-800"></div>
-                    <div class="h-32 w-10 border bg-purple-800"></div>
-                    <div class="h-48 w-10 border bg-purple-800"></div>
-                    <div class="h-16 w-10 border bg-purple-800"></div>
+                <h3 class="my-8 text-lg font-medium leading-6 text-gray-900">
+                    {{ selectedTicker.name }} - RUB
+                </h3>
+
+                <div class="flex h-64 items-end border-b border-l border-gray-300">
+                    <div
+                        v-for="(graph, index) in normalizeGraph"
+                        :key="index"
+                        :style="{ height: `${graph}%` }"
+                        class="w-10 border bg-purple-800"
+                    ></div>
                 </div>
+
                 <button
+                    @click="selectedTicker = null"
                     type="button"
                     class="absolute right-0 top-0"
                 >
@@ -191,6 +154,116 @@
                     </svg>
                 </button>
             </section>
-        </div>
+        </template>
     </div>
 </template>
+
+<script>
+    import axios from 'axios';
+
+    export default {
+        data() {
+            return {
+                error: '',
+                request: '',
+                tickers: [],
+                selectedTicker: null,
+            };
+        },
+
+        methods: {
+            deleteTicker(tickerToRemove) {
+                this.tickers = this.tickers.filter((t) => t !== tickerToRemove);
+
+                if (this.selectedTicker === tickerToRemove) {
+                    this.selectedTicker = null;
+                }
+            },
+
+            issetTicker(tickerName) {
+                return !!this.tickers.find((currentTicker) => currentTicker.name === tickerName);
+            },
+
+            async requestTicker() {
+                this.clearErrors();
+
+                const currentTicker = this.request.toUpperCase();
+
+                if (!currentTicker) {
+                    this.error = 'Нужно заполнить';
+                    return;
+                }
+
+                if (this.issetTicker(currentTicker)) {
+                    this.error = 'Тикер уже добавлен';
+                    return;
+                }
+
+                await axios
+                    .get('https://min-api.cryptocompare.com/data/price', {
+                        params: {
+                            api_key:
+                                '1a7434ecfe744b68e69e07b7c3a10d1d883378610ebf06c3dd01d18cc2dc97bb',
+                            fsym: currentTicker,
+                            tsyms: 'RUB',
+                        },
+                    })
+                    .then((response) => {
+                        if (response.data?.Response === 'Error') {
+                            this.error = 'Не найден курс';
+                            return;
+                        }
+
+                        const ticker = {
+                            name: currentTicker,
+                            price: [this.formatPrice(response.data.RUB)],
+                        };
+
+                        this.tickers.push(ticker);
+
+                        this.subscribeToUpdate(this.tickers[this.tickers.length - 1]);
+                    });
+            },
+
+            subscribeToUpdate(tickerToUpdate) {
+                setInterval(async () => {
+                    await axios
+                        .get('https://min-api.cryptocompare.com/data/price', {
+                            params: {
+                                api_key:
+                                    '1a7434ecfe744b68e69e07b7c3a10d1d883378610ebf06c3dd01d18cc2dc97bb',
+                                fsym: tickerToUpdate.name,
+                                tsyms: 'RUB',
+                            },
+                        })
+                        .then((response) => {
+                            if (response.data?.Response === 'Error') {
+                                return;
+                            }
+
+                            tickerToUpdate.price.push(this.formatPrice(response.data.RUB));
+                        });
+                }, 30000);
+            },
+
+            formatPrice(price) {
+                return price > 1 ? price.toFixed(2) : price.toPrecision(2);
+            },
+
+            clearErrors() {
+                this.error = '';
+            },
+        },
+
+        computed: {
+            normalizeGraph() {
+                const maxValue = Math.max(...this.selectedTicker.price);
+                const minValue = Math.min(...this.selectedTicker.price);
+
+                return this.selectedTicker.price.map(
+                    (price) => 5 + (((price - minValue) * 95) / (maxValue - minValue) || 0)
+                );
+            },
+        },
+    };
+</script>

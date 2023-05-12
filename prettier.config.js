@@ -8,6 +8,7 @@ module.exports = {
     singleAttributePerLine: true,
     trailingComma: 'es5',
     endOfLine: 'crlf',
+    vueIndentScriptAndStyle: true,
     plugins: [require('prettier-plugin-tailwindcss')],
     tailwindConfig: './tailwind.config.js',
 };
